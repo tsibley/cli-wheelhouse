@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# This script is used to build wheels for multiple Python 3 versions (3.5, 3.6,
+# 3.7) on both Linux (via the manylinux1 build containers) and macOS.
+#
+set -xeuo pipefail
+
+: ${NEXTSTRAIN_CLI_VERSION:?You must provide a nextstrain-cli version for which to build wheels.}
+
+cd "$(dirname $0)/.."
+
+# Build wheels
+for python in /opt/python/cp3[567]-*/bin/python3; do
+    "$python" -m pip wheel "nextstrain-cli==$NEXTSTRAIN_CLI_VERSION" --wheel-dir .
+done
+
+# On Linux, make copies of platform-specific wheels, massaging them to use the
+# manylinux1 platform tag.  This includes bundling of external shared
+# libraries, if any, into the wheels.  Wheels which aren't platform-specific
+# are left untouched and no copy is made.
+if [[ $(uname -s) == Linux ]]; then
+    for wheel in *.whl; do
+        auditwheel repair "$wheel" --wheel-dir .
+    done
+fi

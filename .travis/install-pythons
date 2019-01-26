@@ -1,0 +1,37 @@
+#!/bin/bash
+set -euo pipefail -x
+
+cd /tmp
+
+# Fetch pip bootstrapping script just once
+curl -fsSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+
+# Install Python 3.5, 3.6, and 3.7 to /opt/python/cp3[567]-*
+python_versions=(
+    # 3.5.4 was the last release to include official binaries due to 3.5 EOL.
+    3.5.4
+    3.6.8
+    3.7.2
+)
+
+for version in ${python_versions[@]}; do
+    major_version=${version:0:3}
+    major_version_nodots=${major_version/./}
+
+    # Download
+    pkg=python-$version-macosx10.6.pkg
+    wget https://www.python.org/ftp/python/$version/$pkg
+
+    # Install into prefix
+    sudo installer -pkg $pkg -target / -dumplog
+
+    # Link into /opt/python/cp3[567]-* for build-wheels
+    sudo mkdir -p /opt/python
+    sudo ln -sv \
+        /Library/Frameworks/Python.framework/Versions/$major_version \
+        /opt/python/cp$major_version_nodots-$version
+
+    # Install latest pip + wheel + setuptools
+    sudo -H /Library/Frameworks/Python.framework/Versions/$major_version/bin/python3 \
+        /tmp/get-pip.py
+done

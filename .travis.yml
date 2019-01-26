@@ -1,0 +1,30 @@
+sudo: required
+
+language: generic
+
+# XXX TODO temporary; normally this would come from trigger
+env:
+  - NEXTSTRAIN_CLI_VERSION=1.8.1
+
+matrix:
+  include:
+    # Linux
+    - services:
+        - docker
+      install:
+        - docker pull quay.io/pypa/manylinux1_x86_64
+        - docker pull quay.io/pypa/manylinux1_i686
+      script:
+        - docker run --rm --env NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_x86_64         /mnt/.travis/build-wheels
+        - docker run --rm --env NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_i686   linux32 /mnt/.travis/build-wheels
+        - ls -l
+
+    # macOS
+    - os: osx
+      script:
+        - ./.travis/install-pythons
+        - ./.travis/build-wheels
+        - ls -l
+
+after_success:
+  - ./.travis/push-wheels

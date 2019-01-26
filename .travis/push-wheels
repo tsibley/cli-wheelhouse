@@ -1,0 +1,17 @@
+#!/bin/bash
+set -xeuo pipefail
+
+: ${NEXTSTRAIN_CLI_VERSION:?You must provide a nextstrain-cli version for which to build wheels.}
+
+cd "$(dirname $0)/.."
+
+# Report status for diagnostics and then add any new or modified files.
+git status
+git add .
+git commit --file - <<.
+Wheels for nextstrain-cli==$NEXTSTRAIN_CLI_VERSION built on $(uname) via Travis CI
+
+$TRAVIS_BUILD_WEB_URL
+.
+# XXX FIXME: remove --dry-run
+git push --dry-run
