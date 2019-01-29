@@ -28,7 +28,10 @@ jobs:
     # Build wheels for Linux
     - stage: build-wheels
       language: python
-      script: cd $(pyenv root) && git remote -v && git show HEAD
+      script:
+        - pyenv --version
+        - cd $(pyenv root) && git fetch --all && git checkout v1.2.9
+        - pyenv --version
 
     # Build wheels for Linux
     - stage: build-wheels
