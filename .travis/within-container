@@ -4,6 +4,7 @@ set -xeuo pipefail
 exec docker run \
   --rm \
   --env BUILD_NEXTSTRAIN_CLI_VERSION \
+  --env TRAVIS_BUILD_NUMBER \
   --volume $(pwd):/mnt \
   --workdir /mnt \
   "$@"
