@@ -4,27 +4,77 @@ language: generic
 
 # XXX TODO temporary; normally this would come from trigger
 env:
-  - NEXTSTRAIN_CLI_VERSION=1.8.1
+  - BUILD_NEXTSTRAIN_CLI_VERSION=1.8.1
 
-matrix:
+# The first two stages, build-wheels and build-pex, cooperatively build a new
+# multi-platform, multi-Python PEX file for the given nextstrain-cli version
+# (as published on PyPi) and then push it as a branch on this same repo.
+#
+# The branch push triggers the third stage, test-pex, in a separate Travis
+# build.  It runs some basic tests against the newly built PEX.  Note that it
+# will also trigger for manual pushes and PRs, which is not undesired.
+stages:
+  - name: build-wheels
+    if: env(BUILD_NEXTSTRAIN_CLI_VERSION) IS present
+
+  - name: build-pex
+    if: env(BUILD_NEXTSTRAIN_CLI_VERSION) IS present
+
+  - name: test-pex
+    if: env(BUILD_NEXTSTRAIN_CLI_VERSION) IS blank
+
+jobs:
   include:
-    # Linux
-    - services:
+    # Build wheels for Linux
+    - stage: wheels
+      services:
         - docker
       install:
         - docker pull quay.io/pypa/manylinux1_x86_64
         - docker pull quay.io/pypa/manylinux1_i686
       script:
-        - docker run --rm --env NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_x86_64         /mnt/.travis/build-wheels
-        - docker run --rm --env NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_i686   linux32 /mnt/.travis/build-wheels
+        - docker run --rm --env BUILD_NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_x86_64         /mnt/.travis/build-wheels
+        - docker run --rm --env BUILD_NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_i686   linux32 /mnt/.travis/build-wheels
         - ls -l
+      after_success:
+        - ./.travis/push-wheels
 
-    # macOS
-    - os: osx
+    # Build wheels for macOS
+    - stage: wheels
+      os: osx
       script:
         - ./.travis/install-pythons
         - ./.travis/build-wheels
         - ls -l
+      after_success:
+        - ./.travis/push-wheels
 
-after_success:
-  - ./.travis/push-wheels
+    # Build PEX
+    - stage: pex
+      script:
+        - ./.travis/build-pex
+      after_success:
+        - ./.travis/push-pex
+
+    # Test the pushed PEX on a variety of Python versions using Linux.  These
+    # tests are similar to nextstrain-cli's own Travis setup.
+    - &test-linux
+      stage: test-pex
+      dist: xenial
+      language: python
+      python: 3.5
+      services:
+        - docker
+      before_script:
+        - git clone https://github.com/nextstrain/zika-tutorial /tmp/zika
+      script:
+        - ./nextstrain version
+        - ./nextstrain check-setup
+        - ./nextstrain update
+        - ./nextstrain build /tmp/zika
+
+    - <<: *test-linux
+      python: 3.6
+
+    - <<: *test-linux
+      python: 3.7

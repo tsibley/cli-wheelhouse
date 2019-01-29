@@ -1,0 +1,70 @@
+#!/bin/bash
+set -xeuo pipefail
+
+: ${BUILD_NEXTSTRAIN_CLI_VERSION:?You must provide a nextstrain-cli version for which to build a PEX.}
+
+cd "$(dirname $0)/.."
+
+# Declare the platforms the PEX will target.
+#
+# Refer to <https://www.python.org/dev/peps/pep-0425/#platform-tag> and
+# <https://docs.python.org/3/distutils/apiref.html#distutils.util.get_platform>
+# for values here.  Also note that PEX will use "manylinux1" wheels
+# automatically for Linux.
+#
+# XXX TODO: Once the Windows issues for the CLI are worked out, we should
+# include win32 and win_amd64 in this list.
+#   -trs, 24 Jan 2019
+platforms=(
+    linux-x86_64
+    macosx-10.14-x86_64
+)
+
+
+# Install the three major Python 3 versions we support so we can build a
+# universal PEX for them.
+#
+# XXX TODO: Maybe at some point automatically pick the latest 3.7.x, 3.6.x,
+# 3.5.x from `pyenv install --list` or `python-build --definitions`.
+#   -trs, 24 Jan 2019
+python_versions=(
+    3.7.0
+    3.6.6
+    3.5.6
+)
+
+pythons=()
+
+for version in ${python_versions[@]}; do
+    pyenv install --skip-existing $version
+    pythons+=("$(pyenv root)"/versions/$version/bin/python)
+done
+
+
+# Build nextstrain PEX for Linux and macOS which will work with Python 3.5+
+nextstrain_pex="nextstrain-$BUILD_NEXTSTRAIN_CLI_VERSION"
+
+pip3 install --upgrade pex
+
+pex -v "nextstrain-cli==$BUILD_NEXTSTRAIN_CLI_VERSION" \
+    --entry-point nextstrain.cli \
+    --python-shebang '/usr/bin/env python3' \
+    "${pythons[@]/#/--python=}" \
+    "${platforms[@]/#/--platform=}" \
+    --wheel \
+    --manylinux \
+    --no-build \
+    --no-pypi \
+    --repo wheels/ \
+    --cache-dir "$(mktemp -dt)" \
+    --output-file "$nextstrain_pex"
+
+
+# Update symlink to latest version
+ln -snvf "$nextstrain_pex" nextstrain
+
+
+# Quickly spot-check that the PEX works
+for python in ${pythons[@]}; do
+    "$python" "$nextstrain_pex" --help >/dev/null
+done

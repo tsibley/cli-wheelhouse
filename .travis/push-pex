@@ -1,0 +1,10 @@
+#!/bin/bash
+set -xeuo pipefail
+
+: ${BUILD_NEXTSTRAIN_CLI_VERSION:?You must provide a nextstrain-cli version for which to push pex.}
+
+"$(dirname $0)"/push <<.
+PEX for nextstrain-cli==$BUILD_NEXTSTRAIN_CLI_VERSION built via Travis CI
+
+$TRAVIS_JOB_WEB_URL
+.

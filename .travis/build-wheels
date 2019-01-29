@@ -5,13 +5,15 @@
 #
 set -xeuo pipefail
 
-: ${NEXTSTRAIN_CLI_VERSION:?You must provide a nextstrain-cli version for which to build wheels.}
+: ${BUILD_NEXTSTRAIN_CLI_VERSION:?You must provide a nextstrain-cli version for which to build wheels.}
 
 cd "$(dirname $0)/.."
 
+mkdir -p wheels
+
 # Build wheels
 for python in /opt/python/cp3[567]-*/bin/python3; do
-    "$python" -m pip wheel "nextstrain-cli==$NEXTSTRAIN_CLI_VERSION" --wheel-dir .
+    "$python" -m pip wheel "nextstrain-cli==$BUILD_NEXTSTRAIN_CLI_VERSION" --wheel-dir wheels
 done
 
 # On Linux, make copies of platform-specific wheels, massaging them to use the
@@ -19,7 +21,7 @@ done
 # libraries, if any, into the wheels.  Wheels which aren't platform-specific
 # are left untouched and no copy is made.
 if [[ $(uname -s) == Linux ]]; then
-    for wheel in *.whl; do
-        auditwheel repair "$wheel" --wheel-dir .
+    for wheel in wheels/*.whl; do
+        auditwheel repair "$wheel" --wheel-dir wheels
     done
 fi

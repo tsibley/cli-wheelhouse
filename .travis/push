@@ -1,0 +1,30 @@
+#!/bin/bash
+set -xeuo pipefail
+
+: ${BUILD_NEXTSTRAIN_CLI_VERSION:?You must provide a nextstrain-cli version for which to push wheels/pex.}
+
+cd "$(dirname $0)/.."
+
+remote=github
+branch=travis/$TRAVIS_BUILD_NUMBER
+
+# Report status for diagnostics
+git status
+
+# Add a destination remote under our control instead of relying on the remote
+# Travis created
+git remote add -f $remote git@github.com:$TRAVIS_REPO_SLUG.git
+
+# Create a new local branch, e.g. travis/42
+git checkout -b $branch
+
+# Add any new or modified files
+git add .
+git commit --file /dev/stdin
+
+# Rebase local branch onto remote branch, if it exists
+if git rev-parse --verify $remote/$branch; then
+    git pull --rebase $remote $branch
+fi
+
+git push $remote HEAD:$branch
