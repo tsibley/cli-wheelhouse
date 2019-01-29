@@ -9,9 +9,9 @@ cd "$(dirname $0)/.."
 ssh_key=.travis/id_rsa
 
 cp $ssh_key $ssh_key.dec
-chmod u=r,go= $ssh_key.dec
+chmod u=rw,go= $ssh_key.dec
 
-ssh-keygen -p -f $ssh_key.dec -P "$SSH_KEY_PASSPHRASE" -N "" || rm $ssh_key.dec
+ssh-keygen -p -f $ssh_key.dec -P "$SSH_KEY_PASSPHRASE" -N ""
 
 # Report status for diagnostics
 git status
