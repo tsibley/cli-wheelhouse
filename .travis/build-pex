@@ -41,6 +41,12 @@ for version in ${python_versions[@]}; do
 done
 
 
+# Fetch travis/:build_id branch shared with previous jobs in this build.
+git fetch --all
+git checkout travis/$TRAVIS_BUILD_NUMBER
+ls -l wheels/
+
+
 # Build nextstrain PEX for Linux and macOS which will work with Python 3.5+
 nextstrain_pex="nextstrain-$BUILD_NEXTSTRAIN_CLI_VERSION"
 

@@ -5,15 +5,24 @@ set -xeuo pipefail
 
 cd "$(dirname $0)/.."
 
-remote=github
-branch=travis/$TRAVIS_BUILD_NUMBER
+# Decrypt SSH key which lets us push to GitHub
+ssh_key=.travis/id_rsa
+
+cp $ssh_key $ssh_key.dec
+chmod u=r,go= $ssh_key.dec
+
+ssh-keygen -p -f $ssh_key.dec -P "$SSH_KEY_PASSPHRASE" -N "" || rm $ssh_key.dec
 
 # Report status for diagnostics
 git status
 
 # Add a destination remote under our control instead of relying on the remote
 # Travis created
-git remote add -f $remote git@github.com:$TRAVIS_REPO_SLUG.git
+remote=github
+branch=travis/$TRAVIS_BUILD_NUMBER
+
+GIT_SSH=.travis/ssh-wrapper \
+    git remote add -f $remote git@github.com:$TRAVIS_REPO_SLUG.git
 
 # Create a new local branch, e.g. travis/42
 git checkout -b $branch
@@ -24,7 +33,9 @@ git commit --file /dev/stdin
 
 # Rebase local branch onto remote branch, if it exists
 if git rev-parse --verify $remote/$branch; then
-    git pull --rebase $remote $branch
+    GIT_SSH=.travis/ssh-wrapper \
+        git pull --rebase $remote $branch
 fi
 
-git push $remote HEAD:$branch
+GIT_SSH=.travis/ssh-wrapper \
+    git push $remote HEAD:$branch
