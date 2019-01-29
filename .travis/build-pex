@@ -21,24 +21,8 @@ platforms=(
 )
 
 
-# Install the three major Python 3 versions we support so we can build a
-# universal PEX for them.
-#
-# XXX TODO: Maybe at some point automatically pick the latest 3.7.x, 3.6.x,
-# 3.5.x from `pyenv install --list` or `python-build --definitions`.
-#   -trs, 24 Jan 2019
-python_versions=(
-    3.7.0
-    3.6.6
-    3.5.6
-)
-
-pythons=()
-
-for version in ${python_versions[@]}; do
-    pyenv install --skip-existing $version
-    pythons+=("$(pyenv root)"/versions/$version/bin/python)
-done
+# Find the three major Python 3 versions we'll support with the PEX.
+pythons=(/opt/python/cp3[567]-*/bin/python3)
 
 
 # Fetch travis/:build_id branch shared with previous jobs in this build.

@@ -51,13 +51,12 @@ jobs:
 
     # Build PEX
     - stage: build-pex
-      dist: xenial
-      language: python
+      services:
+        - docker
+      install:
+        - docker pull quay.io/pypa/manylinux1_x86_64
       script:
-        # Upgrade pyenv on Travis to support Python 3.7.0
-        - git -C "$(pyenv root)" fetch --all
-        - git -C "$(pyenv root)" checkout v1.2.9
-        - ./.travis/build-pex
+        - docker run --rm --env BUILD_NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_x86_64 /mnt/.travis/build-pex
       after_success:
         - ./.travis/push-pex
 
