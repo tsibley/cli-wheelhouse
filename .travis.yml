@@ -11,8 +11,7 @@ env:
 # (as published on PyPi) and then push it as a branch on this same repo.
 #
 # The branch push triggers the third stage, test-pex, in a separate Travis
-# build.  It runs some basic tests against the newly built PEX.  Note that it
-# will also trigger for manual pushes and PRs, which is not undesired.
+# build.  It runs some basic tests against the newly built PEX.
 stages:
   - name: build-wheels
     if: env(BUILD_NEXTSTRAIN_CLI_VERSION) IS present
@@ -21,7 +20,7 @@ stages:
     if: env(BUILD_NEXTSTRAIN_CLI_VERSION) IS present
 
   - name: test-pex
-    if: env(BUILD_NEXTSTRAIN_CLI_VERSION) IS blank
+    if: env(BUILD_NEXTSTRAIN_CLI_VERSION) IS blank AND branch =~ ^travis/
 
 jobs:
   include:
@@ -51,6 +50,7 @@ jobs:
 
     # Build PEX
     - stage: build-pex
+      dist: xenial
       services:
         - docker
       install:

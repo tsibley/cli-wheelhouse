@@ -26,7 +26,9 @@ pythons=(/opt/python/cp3[567]-*/bin/python3)
 
 
 # Fetch travis/:build_id branch shared with previous jobs in this build.
+git remote -v
 git fetch --all
+git branch --all
 git checkout travis/$TRAVIS_BUILD_NUMBER
 ls -l wheels/
 
