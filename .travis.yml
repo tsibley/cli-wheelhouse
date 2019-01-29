@@ -27,14 +27,6 @@ jobs:
   include:
     # Build wheels for Linux
     - stage: build-wheels
-      language: python
-      script:
-        - pyenv --version
-        - cd $(pyenv root) && git fetch --all && git checkout v1.2.9
-        - pyenv --version
-
-    # Build wheels for Linux
-    - stage: build-wheels
       services:
         - docker
       install:
@@ -60,6 +52,9 @@ jobs:
     # Build PEX
     - stage: build-pex
       script:
+        # Upgrade pyenv on Travis to support Python 3.7.0
+        - git -C "$(pyenv root)" fetch --all
+        - git -C "$(pyenv root)" checkout v1.2.9
         - ./.travis/build-pex
       after_success:
         - ./.travis/push-pex
