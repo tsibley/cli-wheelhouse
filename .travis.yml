@@ -33,8 +33,8 @@ jobs:
         - docker pull quay.io/pypa/manylinux1_x86_64
         - docker pull quay.io/pypa/manylinux1_i686
       script:
-        - docker run --rm --env BUILD_NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_x86_64         /mnt/.travis/build-wheels
-        - docker run --rm --env BUILD_NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_i686   linux32 /mnt/.travis/build-wheels
+        - ./.travis/within-container quay.io/pypa/manylinux1_x86_64         ./.travis/build-wheels
+        - ./.travis/within-container quay.io/pypa/manylinux1_i686   linux32 ./.travis/build-wheels
         - ls -l wheels
       after_success:
         - ./.travis/push-wheels
@@ -56,7 +56,7 @@ jobs:
       install:
         - docker pull quay.io/pypa/manylinux1_x86_64
       script:
-        - docker run --rm --env BUILD_NEXTSTRAIN_CLI_VERSION -v $(pwd):/mnt quay.io/pypa/manylinux1_x86_64 /mnt/.travis/build-pex
+        - ./.travis/within-container quay.io/pypa/manylinux1_x86_64 ./.travis/build-pex
       after_success:
         - ./.travis/push-pex
 
