@@ -28,7 +28,7 @@ jobs:
     # Build wheels for Linux
     - stage: build-wheels
       language: python
-      script: pyenv --version && pyenv root
+      script: cd $(pyenv root) && git status
 
     # Build wheels for Linux
     - stage: build-wheels
