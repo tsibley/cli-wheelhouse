@@ -51,6 +51,8 @@ jobs:
 
     # Build PEX
     - stage: build-pex
+      dist: xenial
+      language: python
       script:
         # Upgrade pyenv on Travis to support Python 3.7.0
         - git -C "$(pyenv root)" fetch --all
